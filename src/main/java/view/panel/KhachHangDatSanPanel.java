@@ -125,7 +125,7 @@ public class KhachHangDatSanPanel extends JPanel {
         formPanel.add(lblTongTien, gbc);
 
         // Nút Thanh Toán
-        JButton btnThanhToan = new JButton("💳 THANH TOÁN BẰNG MÃ QR");
+        JButton btnThanhToan = new JButton("THANH TOÁN BẰNG MÃ QR");
         btnThanhToan.setFont(new Font("Segoe UI", Font.BOLD, 16));
         btnThanhToan.setBackground(new Color(40, 167, 69)); // Xanh lá
         btnThanhToan.setForeground(Color.WHITE);

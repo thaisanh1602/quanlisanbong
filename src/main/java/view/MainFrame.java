@@ -248,14 +248,8 @@ public class MainFrame extends JFrame {
         }
     }
 
-    // Main test class nhanh mà không cần qua LoginFrame
     public static void main(String[] args) {
-        // Thiết lập giao diện FlatLaf cho MainFrame (Giống LoginFrame)
-        try {
-            UIManager.setLookAndFeel(new com.formdev.flatlaf.FlatLightLaf());
-        } catch (Exception ex) {
-            System.err.println("Không thể thiết lập giao diện UI");
-        }
+        ThemeSetup.applyTheme();
 
         SwingUtilities.invokeLater(() -> {
             new MainFrame().setVisible(true);

@@ -109,6 +109,8 @@ public class LoginFrame extends JFrame {
         txtUsername.setPreferredSize(new Dimension(350, 40));
         txtUsername.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         txtUsername.setAlignmentX(Component.LEFT_ALIGNMENT);
+        txtUsername.putClientProperty("JTextField.placeholderText", "Nhập tên đăng nhập...");
+        txtUsername.putClientProperty("JTextField.showClearButton", true);
         formPanel.add(txtUsername);
 
         formPanel.add(Box.createRigidArea(new Dimension(0, 20)));
@@ -126,6 +128,8 @@ public class LoginFrame extends JFrame {
         txtPassword.setPreferredSize(new Dimension(350, 40));
         txtPassword.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         txtPassword.setAlignmentX(Component.LEFT_ALIGNMENT);
+        txtPassword.putClientProperty("JTextField.placeholderText", "Nhập mật khẩu...");
+        txtPassword.putClientProperty("JPasswordField.showRevealButton", true);
         formPanel.add(txtPassword);
 
         formPanel.add(Box.createRigidArea(new Dimension(0, 30)));
@@ -212,15 +216,7 @@ public class LoginFrame extends JFrame {
     }
 
     public static void main(String[] args) {
-        try {
-            UIManager.setLookAndFeel(new FlatLightLaf());
-            UIManager.put("Button.arc", 12); // Bo góc mềm mại cho nút
-            UIManager.put("Component.arc", 12);
-            UIManager.put("TextComponent.arc", 12); // Bo góc cho ô nhập text
-            UIManager.put("TextComponent.margin", new Insets(8, 12, 8, 12)); // Khoảng cách viền Text
-        } catch (Exception ex) {
-            System.err.println("Không thể khởi tạo FlatLaf");
-        }
+        ThemeSetup.applyTheme();
 
         SwingUtilities.invokeLater(() -> {
             new LoginFrame().setVisible(true);

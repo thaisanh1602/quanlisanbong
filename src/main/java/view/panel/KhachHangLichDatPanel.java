@@ -29,7 +29,7 @@ public class KhachHangLichDatPanel extends JPanel {
         lblTitle.setForeground(new Color(33, 37, 41));
         headerPanel.add(lblTitle, BorderLayout.WEST);
 
-        JButton btnRefresh = new JButton("Làm mới 🔄");
+        JButton btnRefresh = new JButton("Làm mới");
         btnRefresh.setFont(new Font("Segoe UI", Font.BOLD, 14));
         btnRefresh.setBackground(new Color(0, 123, 255));
         btnRefresh.setForeground(Color.WHITE);
