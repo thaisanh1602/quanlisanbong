@@ -13,7 +13,7 @@ public class DatabaseConnection {
     private static final String DB_NAME = "QuanLySanBong";
     private static final String USERNAME = "root";
     // TODO: Cập nhật mật khẩu MySQL của bạn ở đây
-    private static final String PASSWORD = "123456";
+    private static final String PASSWORD = "1234";
 
     private static final String URL = "jdbc:mysql://" + HOST + ":" + PORT + "/" + DB_NAME + "?useSSL=false&characterEncoding=UTF-8&allowPublicKeyRetrieval=true";
 

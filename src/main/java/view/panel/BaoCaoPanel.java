@@ -47,9 +47,9 @@ public class  BaoCaoPanel extends JPanel {
         tabbedPane = new JTabbedPane();
         tabbedPane.setFont(new Font("Segoe UI", Font.BOLD, 13));
 
-        tabbedPane.addTab("📊  Biểu đồ Doanh Thu", buildBieuDoTab());
-        tabbedPane.addTab("📋  Chi tiết Thanh Toán", buildChiTietTab());
-        tabbedPane.addTab("🏟️  Thống kê Đặt Sân", buildThongKeDatSanTab());
+        tabbedPane.addTab("Biểu đồ Doanh Thu", buildBieuDoTab());
+        tabbedPane.addTab("Chi tiết Thanh Toán", buildChiTietTab());
+        tabbedPane.addTab("Thống kê Đặt Sân", buildThongKeDatSanTab());
 
         // Refresh khi chuyển tab
         tabbedPane.addChangeListener(e -> {

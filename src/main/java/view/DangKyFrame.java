@@ -42,24 +42,28 @@ public class DangKyFrame extends JFrame {
         // Tên Đăng Nhập
         formPanel.add(createLabel("Tên đăng nhập:"));
         txtUsername = createTextField();
+        txtUsername.putClientProperty("JTextField.placeholderText", "Nhập tên đăng nhập mới...");
         formPanel.add(txtUsername);
         formPanel.add(Box.createRigidArea(new Dimension(0, 15)));
 
         // Số điện thoại
         formPanel.add(createLabel("Số điện thoại:"));
         txtSDT = createTextField();
+        txtSDT.putClientProperty("JTextField.placeholderText", "Nhập số điện thoại 10 chữ số...");
         formPanel.add(txtSDT);
         formPanel.add(Box.createRigidArea(new Dimension(0, 15)));
 
         // Mật khẩu
         formPanel.add(createLabel("Mật khẩu:"));
         txtPassword = createPasswordField();
+        txtPassword.putClientProperty("JTextField.placeholderText", "Tạo mật khẩu...");
         formPanel.add(txtPassword);
         formPanel.add(Box.createRigidArea(new Dimension(0, 15)));
 
         // Nhập lại mật khẩu
         formPanel.add(createLabel("Nhập lại mật khẩu:"));
         txtRePassword = createPasswordField();
+        txtRePassword.putClientProperty("JTextField.placeholderText", "Xác nhận lại mật khẩu...");
         formPanel.add(txtRePassword);
         formPanel.add(Box.createRigidArea(new Dimension(0, 20)));
 
@@ -107,6 +111,7 @@ public class DangKyFrame extends JFrame {
         tf.setMaximumSize(new Dimension(350, 35));
         tf.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         tf.setAlignmentX(Component.CENTER_ALIGNMENT);
+        tf.putClientProperty("JTextField.showClearButton", true);
         return tf;
     }
 
@@ -115,6 +120,7 @@ public class DangKyFrame extends JFrame {
         pf.setMaximumSize(new Dimension(350, 35));
         pf.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         pf.setAlignmentX(Component.CENTER_ALIGNMENT);
+        pf.putClientProperty("JPasswordField.showRevealButton", true);
         return pf;
     }
 
