@@ -71,6 +71,7 @@ view\panel\KhachHangDatSanPanel.class
 network\util\EmojiPanel.class
 view\panel\KhachHangDatSanPanel$SanBongItem.class
 view\panel\XemBangSanPanel$2.class
+view\ThemeSetup.class
 dao\KhachHangDAO.class
 model\TaiKhoan.class
 network\call\VideoCallManager.class

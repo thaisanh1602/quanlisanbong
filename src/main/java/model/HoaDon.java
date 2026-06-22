@@ -5,6 +5,7 @@ import java.sql.Timestamp;
 public class HoaDon {
     private int maHD;
     private Timestamp ngayLap;
+    private String maNV;
     private String sdtKhach;
     private double tongTienSan;
     private int giamGia;
@@ -16,9 +17,10 @@ public class HoaDon {
     public HoaDon() {
     }
 
-    public HoaDon(int maHD, Timestamp ngayLap, String sdtKhach, double tongTienSan, int giamGia, int thue, double tongThanhToan, double soTienNhan, double tienTraLai) {
+    public HoaDon(int maHD, Timestamp ngayLap, String maNV, String sdtKhach, double tongTienSan, int giamGia, int thue, double tongThanhToan, double soTienNhan, double tienTraLai) {
         this.maHD = maHD;
         this.ngayLap = ngayLap;
+        this.maNV = maNV;
         this.sdtKhach = sdtKhach;
         this.tongTienSan = tongTienSan;
         this.giamGia = giamGia;
@@ -33,6 +35,8 @@ public class HoaDon {
     public void setMaHD(int maHD) { this.maHD = maHD; }
     public Timestamp getNgayLap() { return ngayLap; }
     public void setNgayLap(Timestamp ngayLap) { this.ngayLap = ngayLap; }
+    public String getMaNV() { return maNV; }
+    public void setMaNV(String maNV) { this.maNV = maNV; }
     public String getSdtKhach() { return sdtKhach; }
     public void setSdtKhach(String sdtKhach) { this.sdtKhach = sdtKhach; }
     public double getTongTienSan() { return tongTienSan; }

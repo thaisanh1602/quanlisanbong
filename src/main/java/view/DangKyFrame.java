@@ -147,14 +147,20 @@ public class DangKyFrame extends JFrame {
         }
 
         TaiKhoanDAO tkDao = new TaiKhoanDAO();
-        TaiKhoan tk = new TaiKhoan(0, username, sdt, "", "Khach Hang"); // Role Khach Hang
+        // Tài khoản khách thì MaNV = null, nhưng SDT được lưu vào TaiKhoan
+        TaiKhoan tk = new TaiKhoan();
+        tk.setMaNV(null);
+        tk.setTenDangNhap(username);
+        tk.setSdt(sdt);
+        tk.setLoaiTK("Khach Hang");
         
-        if (tkDao.insertTaiKhoan(tk, pass)) {
+        int generatedMaTK = tkDao.insertTaiKhoanGetId(tk, pass);
+        if (generatedMaTK > 0) {
             JOptionPane.showMessageDialog(this, "Đăng ký thành công! Vui lòng đăng nhập.");
             new LoginFrame().setVisible(true);
             this.dispose();
         } else {
-            JOptionPane.showMessageDialog(this, "Tên đăng nhập / Số điện thoại đã tồn tại hoặc có lỗi xảy ra!");
+            JOptionPane.showMessageDialog(this, "Tên đăng nhập đã tồn tại hoặc có lỗi xảy ra!");
         }
     }
 }

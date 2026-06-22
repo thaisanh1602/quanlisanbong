@@ -146,14 +146,34 @@ public class NhanVienDAO {
         try {
             conn.setAutoCommit(false);
             
-            // 1. Thêm TaiKhoan
+            // 1. Generate MaNV first
+            String maNV = "NV001";
+            String sqlGetMaxId = "SELECT MaNV FROM NhanVien WHERE MaNV LIKE 'NV%'";
+            int maxId = 0;
+            try (Statement st = conn.createStatement();
+                 ResultSet rs = st.executeQuery(sqlGetMaxId)) {
+                while (rs.next()) {
+                    String id = rs.getString(1);
+                    try {
+                        int num = Integer.parseInt(id.substring(2));
+                        // Ignore previously generated random IDs (length > 5 or num >= 10000)
+                        if (num < 10000 && num > maxId) {
+                            maxId = num;
+                        }
+                    } catch (Exception e) {}
+                }
+            }
+            maNV = String.format("NV%03d", maxId + 1);
+
+            // 2. Thêm TaiKhoan
             int genMaTK = -1;
-            String sqlTK = "INSERT INTO TaiKhoan (TenDangNhap, MatKhau, LoaiTK) VALUES (?, ?, ?)";
+            String sqlTK = "INSERT INTO TaiKhoan (MaNV, TenDangNhap, MatKhau, LoaiTK) VALUES (?, ?, ?, ?)";
             try (PreparedStatement pstTK = conn.prepareStatement(sqlTK, Statement.RETURN_GENERATED_KEYS)) {
-                pstTK.setString(1, nv.getEmail()); // Email làm user
+                pstTK.setString(1, maNV);
+                pstTK.setString(2, nv.getEmail()); // Email làm user
                 String hashedPw = BCrypt.hashpw(rawPassword, BCrypt.gensalt());
-                pstTK.setString(2, hashedPw);
-                pstTK.setString(3, "Nhân viên");
+                pstTK.setString(3, hashedPw);
+                pstTK.setString(4, "Nhân viên");
                 pstTK.executeUpdate();
                 
                 try (ResultSet rs = pstTK.getGeneratedKeys()) {
@@ -166,8 +186,7 @@ public class NhanVienDAO {
                 return false;
             }
 
-            // 2. Thêm NhanVien
-            String maNV = "NV" + (System.currentTimeMillis() % 100000); // Generate ID tạm
+            // 3. Thêm NhanVien
             String sqlNV = "INSERT INTO NhanVien (MaNV, MaTK, Ho, Ten, SDT, GioiTinh, Email, Luong, NgayBatDau, ChucVu) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
             try (PreparedStatement pstNV = conn.prepareStatement(sqlNV)) {
                 pstNV.setString(1, maNV);

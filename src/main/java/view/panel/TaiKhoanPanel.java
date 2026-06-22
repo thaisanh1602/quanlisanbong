@@ -171,7 +171,7 @@ public class TaiKhoanPanel extends JPanel {
             return;
         }
         
-        TaiKhoan tk = new TaiKhoan(0, user, "", cbLoaiTK.getSelectedItem().toString());
+        TaiKhoan tk = new TaiKhoan(0, null, user, "", cbLoaiTK.getSelectedItem().toString());
         if (tkDao.insertTaiKhoan(tk, pass)) {
             JOptionPane.showMessageDialog(this, "Thêm tài khoản thành công!");
             loadDataToTable();

@@ -7,8 +7,8 @@ import java.sql.*;
 public class HoaDonDAO {
 
     public boolean taoHoaDonVaThanhToan(HoaDon hd, java.util.List<Integer> listMaPhieu) {
-        String sqlHD = "INSERT INTO HoaDon (NgayLap, SDT_Khach, TongTienSan, GiamGia, Thue, TongThanhToan, SoTienNhan, TienTraLai) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-        String sqlUpdatePhieu = "UPDATE PhieuDatSan SET TrangThaiTT = 1 WHERE MaPhieu = ?";
+        String sqlHD = "INSERT INTO HoaDon (NgayLap, MaNV, SDT_Khach, TongTienSan, GiamGia, Thue, TongThanhToan, SoTienNhan, TienTraLai) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        String sqlUpdatePhieu = "UPDATE PhieuDatSan SET TrangThaiTT = 1, MaHD = ? WHERE MaPhieu = ?";
         
         Connection conn = DatabaseConnection.getConnection();
         if (conn == null) return false;
@@ -20,13 +20,14 @@ public class HoaDonDAO {
             int generatedMaHD = -1;
             try (PreparedStatement pstHD = conn.prepareStatement(sqlHD, Statement.RETURN_GENERATED_KEYS)) {
                 pstHD.setTimestamp(1, hd.getNgayLap());
-                pstHD.setString(2, hd.getSdtKhach());
-                pstHD.setDouble(3, hd.getTongTienSan());
-                pstHD.setInt(4, hd.getGiamGia());
-                pstHD.setInt(5, hd.getThue());
-                pstHD.setDouble(6, hd.getTongThanhToan());
-                pstHD.setDouble(7, hd.getSoTienNhan());
-                pstHD.setDouble(8, hd.getTienTraLai());
+                pstHD.setString(2, hd.getMaNV());
+                pstHD.setString(3, hd.getSdtKhach());
+                pstHD.setDouble(4, hd.getTongTienSan());
+                pstHD.setInt(5, hd.getGiamGia());
+                pstHD.setInt(6, hd.getThue());
+                pstHD.setDouble(7, hd.getTongThanhToan());
+                pstHD.setDouble(8, hd.getSoTienNhan());
+                pstHD.setDouble(9, hd.getTienTraLai());
                 pstHD.executeUpdate();
                 
                 try (ResultSet rs = pstHD.getGeneratedKeys()) {
@@ -45,7 +46,8 @@ public class HoaDonDAO {
             // 2. Chuyển trạng thái phiếu đặt sân thành đã thanh toán
             try (PreparedStatement pstPDS = conn.prepareStatement(sqlUpdatePhieu)) {
                 for (Integer maPhieu : listMaPhieu) {
-                    pstPDS.setInt(1, maPhieu);
+                    pstPDS.setInt(1, generatedMaHD);
+                    pstPDS.setInt(2, maPhieu);
                     pstPDS.addBatch();
                 }
                 pstPDS.executeBatch();
@@ -95,7 +97,7 @@ public class HoaDonDAO {
         String sql = "SELECT P.NgayThue AS DateOnly, SUM(P.Duration * S.GiaTien) AS Revenue " +
                      "FROM PhieuDatSan P " +
                      "JOIN SanBong S ON P.MaSan = S.MaSan " +
-                     "WHERE P.TrangThaiTT = 1 AND P.NgayThue >= DATE_SUB(CURDATE(), INTERVAL 30 DAY) " +
+                     "WHERE P.TrangThaiTT >= 1 AND P.NgayThue >= DATE_SUB(CURDATE(), INTERVAL 30 DAY) " +
                      "GROUP BY P.NgayThue " +
                      "ORDER BY DateOnly ASC";
         try (Connection conn = DatabaseConnection.getConnection();
@@ -119,10 +121,11 @@ public class HoaDonDAO {
         StringBuilder sql = new StringBuilder(
             "SELECT P.MaPhieu, P.TenKhachHang, P.SDT_Khach, P.MaSan, " +
             "       P.NgayThue, P.GioBatDau, P.GioKetThuc, P.Duration, " +
-            "       S.LoaiSan, S.GiaTien " +
+            "       S.LoaiSan, S.GiaTien, H.MaNV " +
             "FROM PhieuDatSan P " +
             "JOIN SanBong S ON S.MaSan = P.MaSan " +
-            "WHERE P.TrangThaiTT = 1"
+            "LEFT JOIN HoaDon H ON P.MaHD = H.MaHD " +
+            "WHERE P.TrangThaiTT >= 1"
         );
         if (ngayThue != null && !ngayThue.isEmpty()) {
             sql.append(" AND P.NgayThue = ?");
@@ -138,7 +141,7 @@ public class HoaDonDAO {
                 while (rs.next()) {
                     result.add(new Object[]{
                         rs.getInt("MaPhieu"),
-                        null,                          // placeholder MaHD
+                        rs.getString("MaNV"),          // placeholder MaHD is now MaNV
                         rs.getString("SDT_Khach"),
                         rs.getString("TenKhachHang"),
                         rs.getString("MaSan"),
@@ -166,7 +169,7 @@ public class HoaDonDAO {
         String sql = "SELECT S.LoaiSan, COUNT(P.MaPhieu) AS SoLuong " +
                      "FROM PhieuDatSan P " +
                      "JOIN SanBong S ON P.MaSan = S.MaSan " +
-                     "WHERE P.TrangThaiTT = 1 ";
+                     "WHERE P.TrangThaiTT >= 1 ";
         boolean hasDate = (tuNgay != null && denNgay != null);
         if (hasDate) {
             sql += "AND P.NgayThue >= ? AND P.NgayThue <= ? ";

@@ -33,8 +33,10 @@ public class LichDatSanPanel extends JPanel {
 
     // Local data cache để bóc tách dữ liệu khi click
     private List<Object[]> currentDataList;
+    private model.TaiKhoan loggedInUser;
 
-    public LichDatSanPanel() {
+    public LichDatSanPanel(model.TaiKhoan tk) {
+        this.loggedInUser = tk;
         phieuDao = new PhieuDatSanDAO();
         hoaDonDao = new HoaDonDAO();
         currentDataList = new ArrayList<>();
@@ -68,11 +70,11 @@ public class LichDatSanPanel extends JPanel {
         add(topPanel, BorderLayout.NORTH);
 
         // --- 2. Center Panel (Bảng) ---
-        String[] columns = {"Khách hàng", "SĐT", "Mã Sân", "Vào (Bắt đầu)", "Ra (Kết thúc)", "Giá Tiền/h", "Thanh Toán"};
+        String[] columns = {"Khách hàng", "SĐT", "Mã Sân", "Vào (Bắt đầu)", "Ra (Kết thúc)", "Giá Tiền/h", "Trạng thái"};
         tableModel = new DefaultTableModel(columns, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
-                return column == 6; // Chỉ cho phép ô "Thanh toán" là click được
+                return column == 6; // Chỉ cho phép ô "Trạng thái" là click được
             }
         };
 
@@ -94,7 +96,7 @@ public class LichDatSanPanel extends JPanel {
 
     public void refreshTableData(String sdt, String ngayLap) {
         tableModel.setRowCount(0);
-        currentDataList = phieuDao.getPhieuChuaThanhToan(sdt, ngayLap, null);
+        currentDataList = phieuDao.getAllPhieuDatSan(sdt, ngayLap, null);
 
         for (Object[] obj : currentDataList) {
             String khach = (String) obj[1];
@@ -104,12 +106,17 @@ public class LichDatSanPanel extends JPanel {
             Time batDau = (Time) obj[6];
             Time ketThuc = (Time) obj[7];
             double gia = (double) obj[9];
+            int trangThaiTT = (int) obj[10];
 
             String timeVao = new SimpleDateFormat("dd/MM/yyyy HH:mm").format(Timestamp.valueOf(ngay.toString() + " " + batDau.toString()));
             String timeRa = new SimpleDateFormat("dd/MM/yyyy HH:mm").format(Timestamp.valueOf(ngay.toString() + " " + ketThuc.toString()));
+            String btnText;
+            if (trangThaiTT == 0) btnText = "THANH TOÁN";
+            else if (trangThaiTT == 1) btnText = "TRẢ SÂN";
+            else btnText = "HOÀN THÀNH";
 
             tableModel.addRow(new Object[]{
-                khach, phone, masan, timeVao, timeRa, String.format("%,.0f", gia), "THANH TOÁN"
+                khach, phone, masan, timeVao, timeRa, String.format("%,.0f", gia), btnText
             });
         }
     }
@@ -189,7 +196,7 @@ public class LichDatSanPanel extends JPanel {
         String sdtKhach = (String) firstObj[2];
         
         // --- TOP: Mã hóa đơn, Ngày lập, SĐT... (Readonly) ---
-        JPanel topPnl = new JPanel(new GridLayout(2, 4, 10, 10));
+        JPanel topPnl = new JPanel(new GridLayout(0, 4, 10, 10));
         topPnl.setBorder(BorderFactory.createTitledBorder("Thông tin Hóa Đơn"));
         
         topPnl.add(new JLabel("Mã Hóa Đơn:")); 
@@ -276,7 +283,7 @@ public class LichDatSanPanel extends JPanel {
         
         btnChot.addActionListener(e -> {
             HoaDon hd = new HoaDon(
-                0, new Timestamp(System.currentTimeMillis()), sdtKhach,
+                0, new Timestamp(System.currentTimeMillis()), loggedInUser.getMaNV(), sdtKhach,
                 finalTongTienSan, Integer.parseInt(txtGiamGia.getText()), 5,
                 Double.parseDouble(txtTongTien.getText()), Double.parseDouble(txtTienNhan.getText()), Double.parseDouble(txtTraLai.getText())
             );
@@ -318,6 +325,15 @@ public class LichDatSanPanel extends JPanel {
         }
         @Override
         public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+            String text = (value != null) ? value.toString() : "THANH TOÁN";
+            setText(text);
+            if ("TRẢ SÂN".equals(text)) {
+                setBackground(new Color(40, 167, 69)); // Green
+            } else if ("THANH TOÁN".equals(text)) {
+                setBackground(new Color(0, 123, 255)); // Blue
+            } else {
+                setBackground(Color.GRAY);
+            }
             return this;
         }
     }
@@ -342,16 +358,36 @@ public class LichDatSanPanel extends JPanel {
         @Override
         public Object getCellEditorValue() {
             SwingUtilities.invokeLater(() -> {
-                // Check Radio "Đơn" hay "Phiếu"
+                int tt = (int) currentDataList.get(clickedRow)[10];
+                if (tt == 2) {
+                    JOptionPane.showMessageDialog(button, "Phiếu đặt sân này đã được xử lý xong!");
+                    return;
+                }
+                
+                if (tt == 1) {
+                    int confirm = JOptionPane.showConfirmDialog(button, "Bạn có chắc chắn nhận trả sân cho phiếu này không?\n(Giải phóng sân cho người khác đặt)", "Xác nhận trả sân", JOptionPane.YES_NO_OPTION);
+                    if (confirm == JOptionPane.YES_OPTION) {
+                        int maPhieu = (int) currentDataList.get(clickedRow)[0];
+                        if (phieuDao.updateTrangThaiPhieu(maPhieu, 2)) {
+                            JOptionPane.showMessageDialog(button, "Đã nhận trả sân thành công. Sân đã được giải phóng!");
+                            refreshTableData(null, null);
+                        } else {
+                            JOptionPane.showMessageDialog(button, "Lỗi khi cập nhật trạng thái trả sân!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+                        }
+                    }
+                    return;
+                }
+                
+                // Check Radio "Đơn" hay "Phiếu" cho trường hợp tt == 0
                 if (rbThanhToanDon.isSelected()) {
                     List<Object[]> payList = new ArrayList<>();
                     payList.add(currentDataList.get(clickedRow));
                     hienThiFormThanhToan(payList);
                 } else {
-                    JOptionPane.showMessageDialog(button, "Bạn đang chọn chế độ 'Thanh toán theo phiếu'. Hãy nhấn nút 'Thanh Toán Bằng Tìm Kiếm' màu vàng ở trên.");
+                    JOptionPane.showMessageDialog(button, "Bạn đang chọn chế độ 'Thanh toán theo phiếu'. Hãy nhấn nút 'Tìm Phiếu' màu vàng ở trên.");
                 }
             });
-            return "THANH TOÁN";
+            return button.getText(); // Return button text to update table model correctly
         }
     }
 

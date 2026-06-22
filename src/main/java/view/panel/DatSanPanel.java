@@ -258,6 +258,11 @@ public class DatSanPanel extends JPanel {
             // Tiến hành ghi vào CSDL Data List các Phiếu
             List<PhieuDatSan> phieus = new ArrayList<>();
             for (SanBong sb : selectedSans) {
+                if (!phieuDao.isSanBongAvailable(sb.getMaSan(), Date.valueOf(ngay), Time.valueOf(beginT + ":00"), Time.valueOf(endT + ":00"))) {
+                    JOptionPane.showMessageDialog(dialog, "Sân " + sb.getTenSan() + " vừa mới được người khác đặt!\nVui lòng tải lại danh sách sân trống.", "Lỗi Trùng Lịch", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+                
                 PhieuDatSan pds = new PhieuDatSan(
                     0, hoTen, sdt, sb.getMaSan(), Date.valueOf(ngay),
                     Time.valueOf(beginT + ":00"), Time.valueOf(endT + ":00"), duration, 0, 0

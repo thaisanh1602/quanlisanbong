@@ -170,7 +170,7 @@ public class  BaoCaoPanel extends JPanel {
         toolbar.add(btnTatCa);
 
         // ── Bảng dữ liệu ─────────────────────────────────────
-        String[] cols = {"Mã Phiếu", "Tên Khách Hàng", "SĐT", "Mã Sân",
+        String[] cols = {"Mã Phiếu", "Mã NV", "Tên Khách Hàng", "SĐT", "Mã Sân",
                          "Ngày Thuê", "Giờ Vào", "Giờ Ra", "Số Giờ", "Đơn Giá", "Thành Tiền"};
         detailModel = new DefaultTableModel(cols, 0) {
             @Override public boolean isCellEditable(int r, int c) { return false; }
@@ -185,21 +185,21 @@ public class  BaoCaoPanel extends JPanel {
         table.setGridColor(new Color(220, 225, 235));
         table.setSelectionBackground(new Color(210, 225, 245));
 
-        // Căn phải cột tiền (cột 8, 9)
+        // Căn phải cột tiền (cột 9, 10)
         DefaultTableCellRenderer rightRenderer = new DefaultTableCellRenderer();
         rightRenderer.setHorizontalAlignment(JLabel.RIGHT);
-        for (int c : new int[]{8, 9}) {
+        for (int c : new int[]{9, 10}) {
             table.getColumnModel().getColumn(c).setCellRenderer(rightRenderer);
         }
         // Căn giữa một số cột
         DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
         centerRenderer.setHorizontalAlignment(JLabel.CENTER);
-        for (int c : new int[]{0, 3, 5, 6, 7}) {
+        for (int c : new int[]{0, 1, 4, 6, 7, 8}) {
             table.getColumnModel().getColumn(c).setCellRenderer(centerRenderer);
         }
 
-        // Độ rộng cột (10 cột)
-        int[] widths = {70, 160, 110, 70, 100, 70, 70, 70, 100, 110};
+        // Độ rộng cột (11 cột)
+        int[] widths = {60, 60, 140, 100, 60, 90, 60, 60, 60, 90, 100};
         for (int i = 0; i < widths.length; i++) {
             table.getColumnModel().getColumn(i).setPreferredWidth(widths[i]);
         }
@@ -251,7 +251,7 @@ public class  BaoCaoPanel extends JPanel {
 
         for (Object[] r : data) {
             int   maPhieu  = (int)            r[0];
-            // r[1] placeholder MaHD
+            String maNV    = (String)         r[1];
             String sdt     = (String)         r[2];
             String tenKH   = (String)         r[3];
             String maSan   = (String)         r[4];
@@ -265,6 +265,7 @@ public class  BaoCaoPanel extends JPanel {
 
             detailModel.addRow(new Object[]{
                 "P-" + maPhieu,
+                maNV != null ? maNV : "N/A",
                 tenKH,
                 sdt,
                 maSan,

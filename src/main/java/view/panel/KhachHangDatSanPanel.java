@@ -217,6 +217,20 @@ public class KhachHangDatSanPanel extends JPanel {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
         String sqlDate = sdf.format(selectedDate);
         
+        // Kiểm tra xem sân có bị trùng giờ không trước khi thanh toán
+        PhieuDatSanDAO phieuDao = new PhieuDatSanDAO();
+        boolean isAvailable = phieuDao.isSanBongAvailable(
+                item.sanBong.getMaSan(), 
+                Date.valueOf(sqlDate), 
+                Time.valueOf(batDauStr + ":00"), 
+                Time.valueOf(ketThucStr + ":00")
+        );
+        
+        if (!isAvailable) {
+            JOptionPane.showMessageDialog(this, "Sân bóng này đã có người đặt trong khoảng thời gian bạn chọn!\nVui lòng chọn giờ hoặc sân khác.", "Lỗi Trùng Lịch", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
         PhieuDatSan phieu = new PhieuDatSan();
         phieu.setTenKhachHang(ten);
         phieu.setSdtKhach(sdt);

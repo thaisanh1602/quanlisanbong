@@ -29,8 +29,8 @@ public class PhieuDatSanDAO {
                      "WHERE LoaiSan IN (" + placeholders.toString() + ") AND TrangThai = 0 AND DaXoa = 0 " +
                      "AND MaSan NOT IN (" +
                      "    SELECT MaSan FROM PhieuDatSan " +
-                     "    WHERE NgayThue = ? AND TrangThaiTT = 0 " +
-                     "    AND (GioBatDau < ? AND GioKetThuc > ?)" + // Chỉ cấm nếu chưa thanh toán
+                     "    WHERE NgayThue = ? AND TrangThaiTT != 2 " +
+                     "    AND (GioBatDau < ? AND GioKetThuc > ?)" + 
                      ")";
         
         try (Connection conn = DatabaseConnection.getConnection();
@@ -60,6 +60,29 @@ public class PhieuDatSanDAO {
             e.printStackTrace();
         }
         return list;
+    }
+
+    /**
+     * Kiểm tra xem sân bóng có đang trống trong khung giờ nhất định hay không
+     */
+    public boolean isSanBongAvailable(String maSan, Date ngayThue, Time gioBatDau, Time gioKetThuc) {
+        String sql = "SELECT COUNT(*) FROM PhieuDatSan WHERE MaSan = ? AND NgayThue = ? " +
+                     "AND TrangThaiTT != 2 AND (GioBatDau < ? AND GioKetThuc > ?)";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement pst = conn.prepareStatement(sql)) {
+            pst.setString(1, maSan);
+            pst.setDate(2, ngayThue);
+            pst.setTime(3, gioKetThuc);
+            pst.setTime(4, gioBatDau);
+            try (ResultSet rs = pst.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1) == 0; // Trả về true nếu không có phiếu nào trùng (count == 0)
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
     }
 
     /**
@@ -108,6 +131,13 @@ public class PhieuDatSanDAO {
     }
 
     /**
+     * Lấy TẤT CẢ danh sách phiếu đặt sân đang hiển thị (0 và 1)
+     */
+    public List<Object[]> getAllPhieuDatSan(String sdt, String ngayLap, String gioBatDau) {
+        return queryPhieuList(sdt, ngayLap, gioBatDau, -1); // -1 để lấy TrangThaiTT != 2
+    }
+
+    /**
      * Lấy danh sách phiếu ĐÃ thanh toán (TrangThaiTT = 1) để rải vô bảng Báo cáo Chi tiết
      */
     public List<Object[]> getPhieuDaThanhToan() {
@@ -135,7 +165,7 @@ public class PhieuDatSanDAO {
                     Time gk = rs.getTime("GioKetThuc");
                     double tongTien = rs.getDouble("GiaTien") * rs.getFloat("Duration");
                     int tt = rs.getInt("TrangThaiTT");
-                    String status = (tt == 1) ? "Đã thanh toán" : "Chưa thanh toán";
+                    String status = (tt >= 1) ? "Đã thanh toán" : "Chưa thanh toán";
                     
                     list.add(new Object[]{ maphieu, masan, date, gb, gk, tongTien, status });
                 }
@@ -147,15 +177,22 @@ public class PhieuDatSanDAO {
     }
 
     // Core Query Tách Ra Thành Chung
-    private List<Object[]> queryPhieuList(String sdt, String ngayLap, String gioBatDau, int trangThai) {
+    private List<Object[]> queryPhieuList(String sdt, String ngayLap, String gioBatDau, Integer trangThai) {
         List<Object[]> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
-            "SELECT P.MaPhieu, P.TenKhachHang, P.SDT_Khach, P.MaSan, P.NgayThue, P.GioBatDau, P.GioKetThuc, P.Duration, S.LoaiSan, S.GiaTien " +
+            "SELECT P.MaPhieu, P.TenKhachHang, P.SDT_Khach, P.MaSan, P.NgayThue, P.GioBatDau, P.GioKetThuc, P.Duration, S.LoaiSan, S.GiaTien, P.TrangThaiTT " +
             "FROM PhieuDatSan P " +
             "JOIN SanBong S ON P.MaSan = S.MaSan " +
-            "WHERE P.TrangThaiTT = ?"
+            "WHERE 1=1"
         );
         
+        if (trangThai != null) {
+            if (trangThai == -1) {
+                sql.append(" AND P.TrangThaiTT != 2");
+            } else {
+                sql.append(" AND P.TrangThaiTT = ?");
+            }
+        }
         if (sdt != null && !sdt.trim().isEmpty()) {
             sql.append(" AND P.SDT_Khach LIKE ?");
         }
@@ -171,7 +208,9 @@ public class PhieuDatSanDAO {
              PreparedStatement pst = conn.prepareStatement(sql.toString())) {
              
             int paramIndex = 1;
-            pst.setInt(paramIndex++, trangThai);
+            if (trangThai != null && trangThai != -1) {
+                pst.setInt(paramIndex++, trangThai);
+            }
             
             if (sdt != null && !sdt.trim().isEmpty()) pst.setString(paramIndex++, "%" + sdt + "%");
             if (ngayLap != null && !ngayLap.trim().isEmpty()) pst.setDate(paramIndex++, Date.valueOf(ngayLap));
@@ -189,7 +228,8 @@ public class PhieuDatSanDAO {
                     float dur = rs.getFloat("Duration");
                     int loai = rs.getInt("LoaiSan");
                     double gia = rs.getDouble("GiaTien");
-                    list.add(new Object[]{ maphieu, tenkh, phone, masan, loai, date, gb, gk, dur, gia });
+                    int tt = rs.getInt("TrangThaiTT");
+                    list.add(new Object[]{ maphieu, tenkh, phone, masan, loai, date, gb, gk, dur, gia, tt });
                 }
             }
         } catch (SQLException e) {
@@ -206,6 +246,21 @@ public class PhieuDatSanDAO {
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement pst = conn.prepareStatement(sql)) {
             pst.setInt(1, maPhieu);
+            return pst.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+    /**
+     * Cập nhật trạng thái phiếu đặt sân
+     */
+    public boolean updateTrangThaiPhieu(int maPhieu, int newState) {
+        String sql = "UPDATE PhieuDatSan SET TrangThaiTT = ? WHERE MaPhieu = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement pst = conn.prepareStatement(sql)) {
+            pst.setInt(1, newState);
+            pst.setInt(2, maPhieu);
             return pst.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();

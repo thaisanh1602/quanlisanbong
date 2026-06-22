@@ -208,7 +208,12 @@ public class QuanLyNhanSuPanel extends JPanel {
         } else {
             btnThem.setVisible(false);
             btnCapNhat.setVisible(true);
-            btnXoa.setVisible(true);
+            // Ẩn nút Xóa nếu nhân viên đang chọn có chức vụ là Quản lý
+            if (selectedNhanVien != null && "Quản lý".equalsIgnoreCase(selectedNhanVien.getChucVu())) {
+                btnXoa.setVisible(false);
+            } else {
+                btnXoa.setVisible(true);
+            }
             btnThoat.setVisible(true);
         }
     }

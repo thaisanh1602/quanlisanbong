@@ -21,7 +21,7 @@ public class MainFrame extends JFrame {
     private LichDatSanPanel lichDatSanPanel;
 
     public MainFrame() {
-        this(new TaiKhoan(1, "admin", "", "Quản lý"));
+        this(new TaiKhoan(1, "NV001", "admin", "", "Quản lý"));
     }
 
     public MainFrame(TaiKhoan taiKhoan) {
@@ -48,7 +48,7 @@ public class MainFrame extends JFrame {
         ribbonPane.setFont(new Font("Segoe UI", Font.BOLD, 13));
 
         // --- TAB 1: TÀI KHOẢN (Chỉ Admin) ---
-        if ("Quản lý".equalsIgnoreCase(currentUser.getLoaiTK())) {
+        if ("Quản lý".equalsIgnoreCase(currentUser.getLoaiTK()) || "Quan Ly".equalsIgnoreCase(currentUser.getLoaiTK())) {
             JPanel pnlTaiKhoan = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
 
             JPanel groupTaiKhoan = createRibbonGroup("Tài khoản");
@@ -91,7 +91,7 @@ public class MainFrame extends JFrame {
         btnQLNS.addActionListener(e -> showPanel("QuanLyNhanSuPanel"));
         groupNhanSu.add(btnQLNS, BorderLayout.CENTER);
 
-        if ("Quản lý".equalsIgnoreCase(currentUser.getLoaiTK())) {
+        if ("Quản lý".equalsIgnoreCase(currentUser.getLoaiTK()) || "Quan Ly".equalsIgnoreCase(currentUser.getLoaiTK())) {
             pnlQuanLy.add(groupNhanSu);
         }
 
@@ -184,7 +184,7 @@ public class MainFrame extends JFrame {
         mainContentPanel.add(new XemBangSanPanel(), "XemBangSanPanel");
         mainContentPanel.add(new DatSanPanel(), "DatSanPanel");
 
-        lichDatSanPanel = new LichDatSanPanel();
+        lichDatSanPanel = new LichDatSanPanel(currentUser);
         mainContentPanel.add(lichDatSanPanel, "LichDatSanPanel");
         mainContentPanel.add(new BaoCaoPanel(), "BaoCaoPanel");
         

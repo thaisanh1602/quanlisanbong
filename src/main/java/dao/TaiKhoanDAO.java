@@ -34,6 +34,7 @@ public class TaiKhoanDAO {
                     if (BCrypt.checkpw(password, hashedPasswordFromDB)) {
                         taiKhoan = new TaiKhoan(
                                 rs.getInt("MaTK"),
+                                rs.getString("MaNV"),
                                 rs.getString("TenDangNhap"),
                                 rs.getString("Sdt"),
                                 hashedPasswordFromDB,
@@ -58,6 +59,7 @@ public class TaiKhoanDAO {
             while (rs.next()) {
                 list.add(new TaiKhoan(
                     rs.getInt("MaTK"),
+                    rs.getString("MaNV"),
                     rs.getString("TenDangNhap"),
                     rs.getString("Sdt"),
                     rs.getString("MatKhau"),
@@ -71,13 +73,14 @@ public class TaiKhoanDAO {
     }
 
     public boolean insertTaiKhoan(TaiKhoan tk, String rawPassword) {
-        String sql = "INSERT INTO TaiKhoan (TenDangNhap, Sdt, MatKhau, LoaiTK) VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO TaiKhoan (MaNV, TenDangNhap, Sdt, MatKhau, LoaiTK) VALUES (?, ?, ?, ?, ?)";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement pst = conn.prepareStatement(sql)) {
-            pst.setString(1, tk.getTenDangNhap());
-            pst.setString(2, tk.getSdt());
-            pst.setString(3, BCrypt.hashpw(rawPassword, BCrypt.gensalt()));
-            pst.setString(4, tk.getLoaiTK());
+            pst.setString(1, tk.getMaNV());
+            pst.setString(2, tk.getTenDangNhap());
+            pst.setString(3, tk.getSdt());
+            pst.setString(4, BCrypt.hashpw(rawPassword, BCrypt.gensalt()));
+            pst.setString(5, tk.getLoaiTK());
             return pst.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
@@ -86,13 +89,14 @@ public class TaiKhoanDAO {
     }
 
     public int insertTaiKhoanGetId(TaiKhoan tk, String rawPassword) {
-        String sql = "INSERT INTO TaiKhoan (TenDangNhap, Sdt, MatKhau, LoaiTK) VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO TaiKhoan (MaNV, TenDangNhap, Sdt, MatKhau, LoaiTK) VALUES (?, ?, ?, ?, ?)";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement pst = conn.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
-            pst.setString(1, tk.getTenDangNhap());
-            pst.setString(2, tk.getSdt());
-            pst.setString(3, BCrypt.hashpw(rawPassword, BCrypt.gensalt()));
-            pst.setString(4, tk.getLoaiTK());
+            pst.setString(1, tk.getMaNV());
+            pst.setString(2, tk.getTenDangNhap());
+            pst.setString(3, tk.getSdt());
+            pst.setString(4, BCrypt.hashpw(rawPassword, BCrypt.gensalt()));
+            pst.setString(5, tk.getLoaiTK());
             int affectedRows = pst.executeUpdate();
             if (affectedRows > 0) {
                 try (ResultSet rs = pst.getGeneratedKeys()) {
