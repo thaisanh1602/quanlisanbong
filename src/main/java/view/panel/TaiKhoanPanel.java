@@ -10,6 +10,8 @@ import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.List;
+import dao.NhanVienDAO;
+import model.NhanVien;
 
 public class TaiKhoanPanel extends JPanel {
     private JTable table;
@@ -19,6 +21,8 @@ public class TaiKhoanPanel extends JPanel {
     private JTextField txtTenDangNhap;
     private JTextField txtMatKhau;
     private JComboBox<String> cbLoaiTK;
+    private JComboBox<String> cbMaNV;
+    private JTextField txtSDT;
     
     // Buttons
     private JButton btnThem, btnCapNhat, btnXoa, btnThoat;
@@ -26,6 +30,7 @@ public class TaiKhoanPanel extends JPanel {
     private TaiKhoanDAO tkDao;
     
     private TaiKhoan selectedTaiKhoan = null;
+    private List<NhanVien> listNV;
 
     public TaiKhoanPanel() {
         tkDao = new TaiKhoanDAO();
@@ -71,10 +76,32 @@ public class TaiKhoanPanel extends JPanel {
         txtTenDangNhap = new JTextField();
         txtMatKhau = new JTextField();
         txtMatKhau.setToolTipText("Mật khẩu gốc (Chưa mã hoá) - Chỉ điền khi thêm/đổi");
+        txtSDT = new JTextField();
         cbLoaiTK = new JComboBox<>(new String[]{"Quản lý", "Nhân viên"});
         
+        // Load NhanVien cho combobox
+        listNV = new NhanVienDAO().getAllNhanVien();
+        String[] nvArr = new String[listNV.size() + 1];
+        nvArr[0] = "Chọn Mã NV";
+        for (int i = 0; i < listNV.size(); i++) {
+            nvArr[i + 1] = listNV.get(i).getMaNV();
+        }
+        cbMaNV = new JComboBox<>(nvArr);
+        
+        // Tự động cập nhật số điện thoại khi chọn Mã NV
+        cbMaNV.addActionListener(e -> {
+            int idx = cbMaNV.getSelectedIndex();
+            if (idx > 0) {
+                txtSDT.setText(listNV.get(idx - 1).getSdt());
+            } else {
+                txtSDT.setText("");
+            }
+        });
+        
         int row = 0;
+        addFormField(formPanel, gbc, "Mã NV:", cbMaNV, row++);
         addFormField(formPanel, gbc, "Tên Đăng Nhập:", txtTenDangNhap, row++);
+        addFormField(formPanel, gbc, "SĐT:", txtSDT, row++);
         addFormField(formPanel, gbc, "Mật khẩu:", txtMatKhau, row++);
         addFormField(formPanel, gbc, "Loại Tài Khoản:", cbLoaiTK, row++);
         
@@ -112,6 +139,17 @@ public class TaiKhoanPanel extends JPanel {
         switchMode(true);
     }
     
+    public void reloadEmployeeList() {
+        listNV = new NhanVienDAO().getAllNhanVien();
+        String[] nvArr = new String[listNV.size() + 1];
+        nvArr[0] = "Chọn Mã NV";
+        for (int i = 0; i < listNV.size(); i++) {
+            nvArr[i + 1] = listNV.get(i).getMaNV();
+        }
+        cbMaNV.setModel(new DefaultComboBoxModel<>(nvArr));
+        loadDataToTable();
+    }
+    
     private void addFormField(JPanel p, GridBagConstraints gbc, String label, Component comp, int row) {
         gbc.gridx = 0; gbc.gridy = row; gbc.gridwidth = 1; gbc.weightx = 0;
         p.add(new JLabel(label), gbc);
@@ -136,8 +174,23 @@ public class TaiKhoanPanel extends JPanel {
             if (tk.getMaTK() == maTK) {
                 selectedTaiKhoan = tk;
                 txtTenDangNhap.setText(tk.getTenDangNhap());
+                txtSDT.setText(tk.getSdt() != null ? tk.getSdt() : "");
                 txtMatKhau.setText("");
                 cbLoaiTK.setSelectedItem(tk.getLoaiTK());
+                
+                if (tk.getMaNV() != null && !tk.getMaNV().isEmpty()) {
+                    boolean found = false;
+                    for (int i = 1; i < cbMaNV.getItemCount(); i++) {
+                        if (cbMaNV.getItemAt(i).equals(tk.getMaNV())) {
+                            cbMaNV.setSelectedIndex(i);
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found) cbMaNV.setSelectedIndex(0);
+                } else {
+                    cbMaNV.setSelectedIndex(0);
+                }
                 break;
             }
         }
@@ -146,7 +199,9 @@ public class TaiKhoanPanel extends JPanel {
     private void switchMode(boolean isAdd) {
         if (isAdd) {
             selectedTaiKhoan = null;
+            cbMaNV.setSelectedIndex(0);
             txtTenDangNhap.setText("");
+            txtSDT.setText("");
             txtMatKhau.setText("");
             cbLoaiTK.setSelectedIndex(1);
             table.clearSelection();
@@ -166,12 +221,19 @@ public class TaiKhoanPanel extends JPanel {
     private void actionThem() {
         String user = txtTenDangNhap.getText().trim();
         String pass = txtMatKhau.getText();
+        String sdt = txtSDT.getText().trim();
+        
+        String maNV = null;
+        if (cbMaNV.getSelectedIndex() > 0) {
+            maNV = listNV.get(cbMaNV.getSelectedIndex() - 1).getMaNV();
+        }
+        
         if (user.isEmpty() || pass.isEmpty()) {
             JOptionPane.showMessageDialog(this, "Tên đăng nhập và Mật khẩu không được rỗng!");
             return;
         }
         
-        TaiKhoan tk = new TaiKhoan(0, null, user, "", cbLoaiTK.getSelectedItem().toString());
+        TaiKhoan tk = new TaiKhoan(0, maNV, user, sdt, "", cbLoaiTK.getSelectedItem().toString());
         if (tkDao.insertTaiKhoan(tk, pass)) {
             JOptionPane.showMessageDialog(this, "Thêm tài khoản thành công!");
             loadDataToTable();
@@ -185,12 +247,21 @@ public class TaiKhoanPanel extends JPanel {
         if (selectedTaiKhoan == null) return;
         String user = txtTenDangNhap.getText().trim();
         String pass = txtMatKhau.getText();
+        String sdt = txtSDT.getText().trim();
+        
+        String maNV = null;
+        if (cbMaNV.getSelectedIndex() > 0) {
+            maNV = listNV.get(cbMaNV.getSelectedIndex() - 1).getMaNV();
+        }
+        
         if (user.isEmpty()) {
             JOptionPane.showMessageDialog(this, "Tên đăng nhập không rỗng!");
             return;
         }
         
         selectedTaiKhoan.setTenDangNhap(user);
+        selectedTaiKhoan.setMaNV(maNV);
+        selectedTaiKhoan.setSdt(sdt);
         selectedTaiKhoan.setLoaiTK(cbLoaiTK.getSelectedItem().toString());
         
         if (tkDao.updateTaiKhoan(selectedTaiKhoan, pass)) {

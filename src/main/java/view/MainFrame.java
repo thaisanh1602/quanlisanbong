@@ -19,6 +19,7 @@ public class MainFrame extends JFrame {
     private CardLayout cardLayout;
     private JPanel mainContentPanel;
     private LichDatSanPanel lichDatSanPanel;
+    private TaiKhoanPanel taiKhoanPanel;
 
     public MainFrame() {
         this(new TaiKhoan(1, "NV001", "admin", "", "Quản lý"));
@@ -179,7 +180,8 @@ public class MainFrame extends JFrame {
 
         // Khởi tạo các Mock Panel đã tạo trước đó
         mainContentPanel.add(new JPanel(), "TrangChu"); // Panel trống ban đầu lót nền
-        mainContentPanel.add(new TaiKhoanPanel(), "TaiKhoanPanel");
+        taiKhoanPanel = new TaiKhoanPanel();
+        mainContentPanel.add(taiKhoanPanel, "TaiKhoanPanel");
         mainContentPanel.add(new QuanLyNhanSuPanel(), "QuanLyNhanSuPanel");
         mainContentPanel.add(new XemBangSanPanel(), "XemBangSanPanel");
         mainContentPanel.add(new DatSanPanel(), "DatSanPanel");
@@ -207,6 +209,9 @@ public class MainFrame extends JFrame {
      * @param panelName Tên định danh của Panel đã được khai báo ở initContentPanels
      */
     public void showPanel(String panelName) {
+        if ("TaiKhoanPanel".equals(panelName) && taiKhoanPanel != null) {
+            taiKhoanPanel.reloadEmployeeList();
+        }
         cardLayout.show(mainContentPanel, panelName);
     }
 
@@ -223,7 +228,7 @@ public class MainFrame extends JFrame {
     private void checkPaydayNotification() {
         Calendar cal = Calendar.getInstance();
         int day = cal.get(Calendar.DAY_OF_MONTH);
-        int PAYDAY = 7; // Ngày 31 hàng tháng là ngày nhận lương (Để test vì hôm nay là 31)
+        int PAYDAY = 23;
 
         String message = "";
         String title = "Thông Báo Lương";

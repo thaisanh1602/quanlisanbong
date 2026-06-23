@@ -28,7 +28,6 @@ public class LoginFrame extends JFrame {
         setLocationRelativeTo(null); // Giữa màn hình
         setResizable(true); // Cửa sổ có thể phóng to, thu nhỏ
         setLayout(new GridLayout(1, 2)); // Chia đôi màn hình tự động trái phải
-
         initLeftPanel();
         initRightPanel();
     }

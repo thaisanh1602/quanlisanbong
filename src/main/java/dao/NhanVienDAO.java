@@ -15,8 +15,8 @@ public class NhanVienDAO {
      */
     public List<NhanVien> getAllNhanVien() {
         List<NhanVien> list = new ArrayList<>();
-        String sql = "SELECT NV.*, TK.MatKhau FROM NhanVien NV " +
-                     "JOIN TaiKhoan TK ON NV.MaTK = TK.MaTK " +
+        String sql = "SELECT NV.*, TK.MatKhau, TK.MaTK AS TK_MaTK FROM NhanVien NV " +
+                     "LEFT JOIN TaiKhoan TK ON NV.MaNV = TK.MaNV " +
                      "ORDER BY NV.MaNV ASC";
         
         try (Connection conn = DatabaseConnection.getConnection();
@@ -26,7 +26,7 @@ public class NhanVienDAO {
             while (rs.next()) {
                 list.add(new NhanVien(
                     rs.getString("MaNV"),
-                    rs.getInt("MaTK"),
+                    rs.getInt("TK_MaTK"),
                     rs.getString("Ho"),
                     rs.getString("Ten"),
                     rs.getString("SDT"),
@@ -165,40 +165,22 @@ public class NhanVienDAO {
             }
             maNV = String.format("NV%03d", maxId + 1);
 
-            // 2. Thêm TaiKhoan
-            int genMaTK = -1;
-            String sqlTK = "INSERT INTO TaiKhoan (MaNV, TenDangNhap, MatKhau, LoaiTK) VALUES (?, ?, ?, ?)";
-            try (PreparedStatement pstTK = conn.prepareStatement(sqlTK, Statement.RETURN_GENERATED_KEYS)) {
-                pstTK.setString(1, maNV);
-                pstTK.setString(2, nv.getEmail()); // Email làm user
-                String hashedPw = BCrypt.hashpw(rawPassword, BCrypt.gensalt());
-                pstTK.setString(3, hashedPw);
-                pstTK.setString(4, "Nhân viên");
-                pstTK.executeUpdate();
-                
-                try (ResultSet rs = pstTK.getGeneratedKeys()) {
-                    if (rs.next()) genMaTK = rs.getInt(1);
-                }
-            }
-            
-            if (genMaTK == -1) {
-                conn.rollback();
-                return false;
-            }
+            // 2. Không tự động thêm TaiKhoan nữa
+            // int genMaTK = -1;
+            // (Đã xóa code tự thêm TaiKhoan)
 
             // 3. Thêm NhanVien
-            String sqlNV = "INSERT INTO NhanVien (MaNV, MaTK, Ho, Ten, SDT, GioiTinh, Email, Luong, NgayBatDau, ChucVu) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            String sqlNV = "INSERT INTO NhanVien (MaNV, MaTK, Ho, Ten, SDT, GioiTinh, Email, Luong, NgayBatDau, ChucVu) VALUES (?, NULL, ?, ?, ?, ?, ?, ?, ?, ?)";
             try (PreparedStatement pstNV = conn.prepareStatement(sqlNV)) {
                 pstNV.setString(1, maNV);
-                pstNV.setInt(2, genMaTK);
-                pstNV.setString(3, nv.getHo());
-                pstNV.setString(4, nv.getTen());
-                pstNV.setString(5, nv.getSdt());
-                pstNV.setString(6, nv.getGioiTinh());
-                pstNV.setString(7, nv.getEmail());
-                pstNV.setDouble(8, nv.getLuong());
-                pstNV.setDate(9, nv.getNgayBatDau());
-                pstNV.setString(10, "Nhân viên"); // Mặc định
+                pstNV.setString(2, nv.getHo());
+                pstNV.setString(3, nv.getTen());
+                pstNV.setString(4, nv.getSdt());
+                pstNV.setString(5, nv.getGioiTinh());
+                pstNV.setString(6, nv.getEmail());
+                pstNV.setDouble(7, nv.getLuong());
+                pstNV.setDate(8, nv.getNgayBatDau());
+                pstNV.setString(9, "Nhân viên"); // Mặc định
                 pstNV.executeUpdate();
             }
 
@@ -216,9 +198,9 @@ public class NhanVienDAO {
      * Lấy thông tin nhân viên từ mã tài khoản (MaTK)
      */
     public NhanVien getNhanVienByMaTK(int maTK) {
-        String sql = "SELECT NV.*, TK.MatKhau FROM NhanVien NV " +
-                     "JOIN TaiKhoan TK ON NV.MaTK = TK.MaTK " +
-                     "WHERE NV.MaTK = ?";
+        String sql = "SELECT NV.*, TK.MatKhau, TK.MaTK AS TK_MaTK FROM NhanVien NV " +
+                     "LEFT JOIN TaiKhoan TK ON NV.MaNV = TK.MaNV " +
+                     "WHERE TK.MaTK = ?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement pst = conn.prepareStatement(sql)) {
             pst.setInt(1, maTK);
@@ -226,7 +208,7 @@ public class NhanVienDAO {
                 if (rs.next()) {
                     return new NhanVien(
                         rs.getString("MaNV"),
-                        rs.getInt("MaTK"),
+                        rs.getInt("TK_MaTK"),
                         rs.getString("Ho"),
                         rs.getString("Ten"),
                         rs.getString("SDT"),
