@@ -75,13 +75,29 @@ public class TaiKhoanDAO {
     public boolean insertTaiKhoan(TaiKhoan tk, String rawPassword) {
         String sql = "INSERT INTO TaiKhoan (MaNV, TenDangNhap, Sdt, MatKhau, LoaiTK) VALUES (?, ?, ?, ?, ?)";
         try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement pst = conn.prepareStatement(sql)) {
+             PreparedStatement pst = conn.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
             pst.setString(1, tk.getMaNV());
             pst.setString(2, tk.getTenDangNhap());
             pst.setString(3, tk.getSdt());
             pst.setString(4, BCrypt.hashpw(rawPassword, BCrypt.gensalt()));
             pst.setString(5, tk.getLoaiTK());
-            return pst.executeUpdate() > 0;
+            int affectedRows = pst.executeUpdate();
+            if (affectedRows > 0) {
+                if (tk.getMaNV() != null && !tk.getMaNV().isEmpty()) {
+                    try (ResultSet rs = pst.getGeneratedKeys()) {
+                        if (rs.next()) {
+                            int generatedMaTK = rs.getInt(1);
+                            String updateNVSql = "UPDATE NhanVien SET MaTK = ? WHERE MaNV = ?";
+                            try (PreparedStatement pstUpdate = conn.prepareStatement(updateNVSql)) {
+                                pstUpdate.setInt(1, generatedMaTK);
+                                pstUpdate.setString(2, tk.getMaNV());
+                                pstUpdate.executeUpdate();
+                            }
+                        }
+                    }
+                }
+                return true;
+            }
         } catch (SQLException e) {
             e.printStackTrace();
         }

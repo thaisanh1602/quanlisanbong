@@ -86,6 +86,8 @@ INSERT INTO NhanVien (MaNV, MaTK, Ho, Ten, SDT, GioiTinh, Email, Luong, NgayBatD
 ('NV001', 1, N'Nguyễn', N'An', '0901234567', N'Nam', 'an.nguyen@gmail.com', 15000000, '2023-01-10', N'Quản lý'),
 ('NV002', 2, N'Trần', N'Nam', '0907778889', N'Nam', 'nam.tran@gmail.com', 7000000, '2023-05-15', N'Nhân viên');
 
+
+
 INSERT INTO PhieuDatSan (TenKhachHang, SDT_Khach, MaSan, NgayThue, GioBatDau, GioKetThuc, Duration, TrangThaiTT, MaHD) VALUES
 (N'Lê Văn Tâm', '0988123123', 'S05_01', '2026-04-05', '17:00:00', '18:30:00', 1.5, 1, 1),
 (N'Nguyễn Thị Bình', '0912334455', 'S07_01', '2026-04-06', '19:00:00', '21:00:00', 2.0, 1, 2),
